@@ -2,11 +2,13 @@ import itertools
 import sys
 from datetime import date, datetime, time
 from time import time as timer
+from typing import Dict, List, Optional
+from functools import wraps
 
-from pydantic import BaseModel, ValidationError
 import pandas as pd
 from loguru import logger as logging
-from typing import List, Dict, Optional
+from pydantic import BaseModel, ValidationError
+
 from shuttlebot import config
 
 pd.set_option("display.max_columns", None)
@@ -21,7 +23,7 @@ class MappingsModel(BaseModel):
 
 
 def validate_json_schema(data: List[Dict]) -> str:
-    """"Validates the Mappings.json file against a predefined pydantic model"""
+    """ "Validates the Mappings.json file against a predefined pydantic model"""
     try:
         # Validate the data against the schema
         [MappingsModel(**venue) for venue in data]
@@ -33,8 +35,8 @@ def validate_json_schema(data: List[Dict]) -> str:
 
 
 def timeit(func):
-    # This function shows the execution time of
-    # the function object passed
+    """Calculates the execution time of the function on top of which the decorator is assigned"""
+    @wraps(func)
     def wrap_func(*args, **kwargs):
         tic = timer()
         result = func(*args, **kwargs)
@@ -44,6 +46,17 @@ def timeit(func):
 
     return wrap_func
 
+
+def async_timer(func):
+    """Calculates the execution time of the Async function on top of which the decorator is assigned"""
+    @wraps(func)
+    async def wrapper(*args, **kwargs):
+        tic = timer()
+        result = await func(*args, **kwargs)
+        tac = timer()
+        logging.info(f"Function {func.__name__!r} executed in {(tac - tic):.4f}s")
+        return result
+    return wrapper
 
 @timeit
 def find_consecutive_slots(
@@ -113,12 +126,5 @@ def parse_consecutive_slots(consecutive_slots):
 
 
 if __name__ == "__main__":
-    venue_name = "swiss-cottage-leisure-centre"
-    target_date = date(2023, 9, 26)
-    consecutive_count = 3
-
-    consecutive_slots = find_consecutive_slots(
-        venue_name, target_date, data_list, consecutive_count
-    )
-    print(consecutive_slots)
-    print(parse_consecutive_slots(consecutive_slots))
+    """Write a test here for calculating consecutive slots"""
+    logging.info("This scripts cannot be called standalone for now")
